@@ -80,21 +80,15 @@ Model1.rec <- function(s, m, t.max, n, a, r, showplot) {
 
       # get X_i, conformity modifier, for each trait (i=trait index)
       k.max <- max(k[k.row,])  # maximum k
+      pi <- sum(k[k.row,] == k.max)  # pi, number of kmax traits (1 if only one, >1 if ties)
       X <- rep(0,s)  # X_i
       
       for (i in 1:s) {
         
-        # first set X_i to unbiased transmission frequencies
-        X[i] <- k[k.row,i] / n
-        
-        # if there is a single maximum k, i.e. single most common trait, and 0 < k_i < n
-        if (sum(k[k.row,] == k.max) == 1 && k[k.row,i] > 0 && k[k.row,i] < n) {  
-          
-          if (k[k.row,i] == k.max) {  # if this k_i is the sole maximum
-            X[i] <- X[i] + a * (n - k[k.row,i]) / n  # then increase proportional to a
-          } else {
-            X[i] <- X[i] - a * k[k.row,i] / n  # otherwise, decrease proportional to a
-          }
+        if (k[k.row,i] == k.max) { # if this k_i is sole or joint maximum
+          X[i] <- k[k.row,i] / n + a * (1 / pi - k[k.row,i] / n)  # then increase proportional to a
+        } else {
+          X[i] <- k[k.row,i] / n - a * k[k.row,i] / n  # otherwise, decrease proportional to a
         }
       }
       
@@ -168,10 +162,9 @@ Model1.rec <- function(s, m, t.max, n, a, r, showplot) {
 
 # s subpopulations/traits, prob of migration m, t.max timesteps, n demonstrators for conformity of strength a and assortment r
 # showplot: 0=no plots, 1=Fst only, 2=all freqs plus Fst
-output.Model1.rec <- Model1.rec(s = 5, m = 0.1, t.max = 100, n = 5, a = 0.2, r = 0, showplot = 1)
+output.Model1.rec <- Model1.rec(s = 5, m = 0.3, t.max = 30, n = 5, a = 0.6, r = 0, showplot = 1)
 
-
-# create Fig 1: multi-line time-series plot for a at m=0.01 and m=0.1-----------------------
+# create Fig 1: multi-line time-series plot for a at m=0.01, m=0.1 and m=0.3-----------------------
 
 # plot 1, at m=0.01
 s.lines <- 5  # common parameters, change these once here
@@ -208,18 +201,33 @@ plot2.timeseries.rec <- ggplot(data = plot2.lines.rec, aes(x = timestep, y = Fst
 
 plot2.timeseries.rec <- direct.label(plot2.timeseries.rec, list(last.points, cex = 1.4, hjust = -0.1))
 
+# plot 3, at m=0.3
+m.lines <- 0.3  # changed for plot2, otherwise same as plot1
+t.lines <- 50
+
+plot3.line1.rec <- Model1.rec(s = s.lines, m = m.lines, t.max = t.lines, n = n.lines, a = 0.0, r = r.lines, showplot = 0)
+plot3.line2.rec <- Model1.rec(s = s.lines, m = m.lines, t.max = t.lines, n = n.lines, a = 0.6, r = r.lines, showplot = 0)
+plot3.line3.rec <- Model1.rec(s = s.lines, m = m.lines, t.max = t.lines, n = n.lines, a = 0.8, r = r.lines, showplot = 0)
+plot3.line4.rec <- Model1.rec(s = s.lines, m = m.lines, t.max = t.lines, n = n.lines, a = 0.9, r = r.lines, showplot = 0)
+plot3.line5.rec <- Model1.rec(s = s.lines, m = m.lines, t.max = t.lines, n = n.lines, a = 1, r = r.lines, showplot = 0)
+plot3.lines.rec <- c(plot3.line1.rec, plot3.line2.rec, plot3.line3.rec, plot3.line4.rec, plot3.line5.rec)
+plot3.lines.rec <- data.frame(Fst = plot3.lines.rec, timestep = rep(1:t.lines, 5), line.id = c(rep("a=0",t.lines),rep("a=0.6",t.lines),rep("a=0.8",t.lines),rep("a=0.9",t.lines),rep("a=1",t.lines)))
+
+plot3.timeseries.rec <- ggplot(data = plot3.lines.rec, aes(x = timestep, y = Fst, color = line.id)) + geom_line(size = 1.5) + labs(x = "timestep", y=expression(F[ST])) + scale_y_continuous(limits = c(0,1)) + scale_x_continuous(limits=c(0,t.lines*1.2), breaks = seq(0, t.lines, by = t.lines/5)) + theme_classic(base_size = 20) + ggtitle("m = 0.3") + theme(axis.line.x = element_line(colour = "black", size = 0.5), axis.line.y = element_line(colour = "black", size = 0.5), legend.title=element_blank(), plot.title = element_text(size = 20, hjust = 0.5), axis.title.y = element_text(size=25, angle=0, vjust=0.5)) + scale_fill_manual(values=cbPalette) + scale_colour_manual(values=cbPalette) + guides(col = guide_legend(reverse = TRUE))
+
+plot3.timeseries.rec <- direct.label(plot3.timeseries.rec, list(last.points, cex = 1.4, hjust = -0.1))
+
 # use cowplot to create composite plot
-all.plots.timeseries.rec <- plot_grid(plot1.timeseries.rec, plot2.timeseries.rec, labels=c("A", "B"), ncol = 2, nrow = 1, label_size = 30, rel_widths = c(1,1))
+all.plots.timeseries.rec <- plot_grid(plot1.timeseries.rec, plot2.timeseries.rec, plot3.timeseries.rec, labels=c("A", "B","C"), ncol = 3, nrow = 1, label_size = 30, rel_widths = c(1,1,1))
 
 # show on screen
 all.plots.timeseries.rec
 
 # save to file (in the working directory)
-save_plot("timeseries_model1_rec.png", all.plots.timeseries.rec, base_width = 30, base_height = 15, units = "cm")
+save_plot("timeseries_model1_rec.png", all.plots.timeseries.rec, base_width = 40, base_height = 12, units = "cm")
 
 
-
-# create Fig 2: plot Fst at varying a and n, for m=0.01, m=0.1 and m=0.2-------------------------------------------------------
+# create Fig 2: plot Fst at varying a and n, for m=0.01, m=0.1 and m=0.3-------------------------------------------------------
 
 # first make function to create one a-n plot
 # NB n can be a single value, or several (e.g. "n = c(3,5,7)")
@@ -254,7 +262,7 @@ plotan.model1.rec <- function (s, m, t.max, n, r, a.max=1, gaps=10, showplot=TRU
   if (showplot == TRUE) {
     print(plotan.plot)
   }
-
+  
   # save to file
   ggsave("plotan.png", width = 20, height = 20, units = "cm", dpi = 300)
   
@@ -268,7 +276,7 @@ Fst.data <- plotan.model1.rec(s = 5, m = 0.2, t.max = 50, r = 0, gaps = 30, n = 
 # three-paneled plot of a and n, for 3 diff m values
 n.lines <- c(3,5,7,11)  # change common values here
 s.lines <- 5
-t.max.lines <- 400
+t.max.lines <- 500
 r.lines <- 0
 gaps.lines <- 30
 
@@ -277,7 +285,7 @@ plot1.an.rec <- plotan.model1.rec(s = s.lines, m = 0.01, t.max = t.max.lines, r 
 
 plot2.an.rec <- plotan.model1.rec(s = s.lines, m = 0.1, t.max = t.max.lines, r = r.lines, n = n.lines, gaps = gaps.lines, showplot = FALSE, showlegend = FALSE)[[2]]
 
-plot3.an.rec <- plotan.model1.rec(s = s.lines, m = 0.2, t.max = t.max.lines, r = r.lines, n = n.lines, gaps = gaps.lines, showplot = FALSE)[[2]]
+plot3.an.rec <- plotan.model1.rec(s = s.lines, m = 0.3, t.max = t.max.lines, r = r.lines, n = n.lines, gaps = gaps.lines, showplot = FALSE)[[2]]
 
 # use cowplot to create composite plot
 legend <- get_legend(plot3.an.rec)
@@ -289,7 +297,6 @@ all.plots.an.rec
 
 # save to file
 save_plot("plots_an_model1_rec.png", all.plots.an.rec, base_width = 35, base_height = 10, units = "cm")
-
 
 # create Fig 3: 2x2 heat map for a and m, for different n and r -------------------------------------------------------
 
@@ -349,32 +356,41 @@ heat <- drawHeatMap.model1.rec(s = 5, n = 5, r = 0.05, t.max = 100, m.max = 0.6,
 
 # use below commands to get data, then create plots with correct legend/axis titles
 s.heats <- 5  # change common values here
-t.max.heats <- 300
+t.max.heats <- 500
 m.max.heats <- 0.6
 a.max.heats <- 1
 grid.size.heats <- 30
 
+# turn Fst values into discrete categories
+heat.breaks <- c(-1,0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+heat.labels <- c("0","0-0.1","0.1-0.2","0.2-0.3","0.3-0.4","0.4-0.5","0.5-0.6","0.6-0.7","0.7-0.8","0.8-0.9","0.9-1")
+
+heat.n3r0.rec$value.heat.discrete <- cut(round(heat.n3r0.rec$value.heat,3), breaks = heat.breaks, labels = heat.labels)
+heat.n3r05.rec$value.heat.discrete <- cut(round(heat.n3r05.rec$value.heat,3), breaks = heat.breaks, labels = heat.labels)
+heat.n7r0.rec$value.heat.discrete <- cut(round(heat.n7r0.rec$value.heat,3), breaks = heat.breaks, labels = heat.labels)
+heat.n7r05.rec$value.heat.discrete <- cut(round(heat.n7r05.rec$value.heat,3), breaks = heat.breaks, labels = heat.labels)
+
+
 heat.n3r0.rec <- drawHeatMap.model1.rec(s = s.heats, n = 3, r = 0, t.max = t.max.heats, m.max = m.max.heats, a.max = a.max.heats, grid.size = grid.size.heats, showplot = F)[[1]]
 # topleft: title n=3,r=0, y-axis, no x-axis
-topleft.n3r0.rec <- ggplot(data = heat.n3r0.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat)) + labs(title = "n = 3, r = 0", y = "m, migration") + theme(legend.position = "none", axis.title.x = element_blank(), axis.title = element_text(size = 18), axis.line = element_blank()) + scale_fill_viridis(name=expression(F[ST])) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
+topleft.n3r0.rec <- ggplot(data = heat.n3r0.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat.discrete)) + labs(title = "n = 3, r = 0", y = "m, migration") + theme(legend.position = "none", axis.title.x = element_blank(), axis.title = element_text(size = 18), axis.line = element_blank()) + scale_fill_viridis(name=expression(F[ST]), discrete = TRUE) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
 
 heat.n7r0.rec <- drawHeatMap.model1.rec(s = s.heats, n = 7, r = 0, t.max = t.max.heats, m.max = m.max.heats, a.max = a.max.heats, grid.size = grid.size.heats, showplot = F)[[1]]
 # top right: title n=7,r=0, no y-axis, no x-axis
-topright.n7r0.rec <- ggplot(data = heat.n7r0.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat)) + labs(title = "n = 7, r = 0") + theme(legend.position = "none", axis.title.x = element_blank(), axis.title.y = element_blank(), axis.line = element_blank()) + scale_fill_viridis(name=expression(F[ST])) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
+topright.n7r0.rec <- ggplot(data = heat.n7r0.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat.discrete)) + labs(title = "n = 7, r = 0") + theme(legend.position = "none", axis.title.x = element_blank(), axis.title.y = element_blank(), axis.line = element_blank()) + scale_fill_viridis(name=expression(F[ST]), discrete = TRUE) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
 
 heat.n3r05.rec <- drawHeatMap.model1.rec(s = s.heats, n = 3, r = 0.5, t.max = t.max.heats, m.max = m.max.heats, a.max = a.max.heats, grid.size = grid.size.heats, showplot = F)[[1]]
 # bottom left: title n=3,r=0.5, both axes
-botleft.n3r05.rec <- ggplot(data = heat.n3r05.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat)) + labs(title = "n = 3, r = 0.5", y = "m, migration", x = "a, acculturation") + theme(legend.position = "none", axis.line = element_blank(), axis.title = element_text(size = 18)) + scale_fill_viridis(name=expression(F[ST])) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
+botleft.n3r05.rec <- ggplot(data = heat.n3r05.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat.discrete)) + labs(title = "n = 3, r = 0.5", y = "m, migration", x = "a, acculturation") + theme(legend.position = "none", axis.line = element_blank(), axis.title = element_text(size = 18)) + scale_fill_viridis(name=expression(F[ST]), discrete = TRUE) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
 
 heat.n7r05.rec <- drawHeatMap.model1.rec(s = s.heats, n = 7, r = 0.5, t.max = t.max.heats, m.max = m.max.heats, a.max = a.max.heats, grid.size = grid.size.heats, showplot = F)[[1]]
 # bottom right: title n=7,r=0.5, no y-axis, x-axis, include legend to extract later
-botright.n7r05.rec <- ggplot(data = heat.n7r05.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat)) + labs(title = "n = 7, r = 0.5", x = "a, acculturation") + theme(axis.title.y = element_blank(), axis.line = element_blank(), axis.title = element_text(size = 18), legend.title = element_text(size = 18)) + scale_fill_viridis(name=expression(F[ST])) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
-
+botright.n7r05.rec <- ggplot(data = heat.n7r05.rec, aes(x = a.heat, y = m.heat)) + geom_tile(aes(fill = value.heat.discrete)) + labs(title = "n = 7, r = 0.5", x = "a, acculturation") + theme(axis.title.y = element_blank(), axis.line = element_blank(), axis.title = element_text(size = 18), legend.title = element_text(size = 18)) + scale_fill_viridis(name=expression(F[ST]), discrete = TRUE) + scale_x_continuous(breaks = seq(0,1,by=0.2), expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
 
 # create 4 graphs with correct combination of axis labels and titles, extract legend, and arrange all in grid using cowplot
 legend <- get_legend(botright.n7r05.rec)
 main_grid <- plot_grid(topleft.n3r0.rec, topright.n7r0.rec, botleft.n3r05.rec, botright.n7r05.rec + theme(legend.position="none"), align = "hv")
-full_grid <- plot_grid(legend, main_grid, rel_widths = c(0.1,1))
+full_grid <- plot_grid(legend, main_grid, rel_widths = c(0.15,1))
 
 # show on screen
 full_grid

@@ -164,7 +164,7 @@ output.Model1.ABM <- Model1.ABM(N = 500, s = 5, m = 0.1, a = 0.2, n = 5, r = 0, 
 
 # PLOTS--------------------------------------------
 
-# Figure S4: time series plots for different values of a, at two migration rates---------------------------------------
+# Figure S8: time series plots for different values of a, at three migration rates---------------------------------------
 
 # run model above to get Fst.data for a set of parameters, then plot all together
 # plot 1, m=0.01
@@ -216,17 +216,39 @@ plot2.timeseries.ABM <- ggplot(data = plot2.lines.ABM, aes(x = timestep, y = Fst
 
 plot2.timeseries.ABM <- direct.label(plot2.timeseries.ABM, list(last.points, cex = 1.4, hjust = -0.1))
 
+# plot 3, m=0.3
+m.lines <- 0.3  # these change, others from plot1
+t.lines <- 30
+
+plot3.line1.ABM <- Model1.ABM(N = N.lines, s = s.lines, m = m.lines, a = 0.0, n = n.lines, r = r.lines, t.max = t.lines, runs = runs.lines, showplot = FALSE)
+plot3.line1.ABM$line.id <- "a=0"
+plot3.line2.ABM <- Model1.ABM(N = N.lines, s = s.lines, m = m.lines, a = 0.6, n = n.lines, r = r.lines, t.max = t.lines, runs = runs.lines, showplot = FALSE)
+plot3.line2.ABM$line.id <- "a=0.6"
+plot3.line3.ABM <- Model1.ABM(N = N.lines, s = s.lines, m = m.lines, a = 0.8, n = n.lines, r = r.lines, t.max = t.lines, runs = runs.lines, showplot = FALSE)
+plot3.line3.ABM$line.id <- "a=0.8"
+plot3.line4.ABM <- Model1.ABM(N = N.lines, s = s.lines, m = m.lines, a = 0.9, n = n.lines, r = r.lines, t.max = t.lines, runs = runs.lines, showplot = FALSE)
+plot3.line4.ABM$line.id <- "a=0.9"
+plot3.line5.ABM <- Model1.ABM(N = N.lines, s = s.lines, m = m.lines, a = 1, n = n.lines, r = r.lines, t.max = t.lines, runs = runs.lines, showplot = FALSE)
+plot3.line5.ABM$line.id <- "a=1"
+
+plot3.lines.ABM <- rbind(plot3.line1.ABM, plot3.line2.ABM, plot3.line3.ABM, plot3.line4.ABM, plot3.line5.ABM)
+plot3.lines.ABM$timestep <- rep(1:t.lines, 5)
+
+plot3.timeseries.ABM <- ggplot(data = plot3.lines.ABM, aes(x = timestep, y = Fst, color = line.id)) + geom_line(size = 1) + geom_ribbon(aes(ymin = Fst_min, ymax = Fst_max, fill = line.id), alpha = 0.1, show.legend = FALSE) + labs(x = "timestep", y=expression(F[ST])) + scale_y_continuous(limits = c(0,1)) + scale_x_continuous(limits=c(0,t.lines*1.2), breaks = seq(0, t.lines, by = t.lines/5)) + theme_classic(base_size = 20) + ggtitle("m = 0.3") + theme(axis.line.x = element_line(colour = "black", size = 0.5), axis.line.y = element_line(colour = "black", size = 0.5), legend.title=element_blank(), plot.title = element_text(size = 20, hjust = 0.5), axis.title.y = element_text(size=25, angle=0, vjust=0.5)) + scale_fill_manual(values=cbPalette) + scale_colour_manual(values=cbPalette) + guides(col = guide_legend(reverse = TRUE))
+
+plot3.timeseries.ABM <- direct.label(plot3.timeseries.ABM, list(last.points, cex = 1.4, hjust = -0.1))
+
 # use cowplot to create composite plot
-all.plots.timeseries.ABM <- plot_grid(plot1.timeseries.ABM, plot2.timeseries.ABM, labels=c("A", "B"), ncol = 2, nrow = 1, label_size = 30, rel_widths = c(1,1))
+all.plots.timeseries.ABM <- plot_grid(plot1.timeseries.ABM, plot2.timeseries.ABM, plot3.timeseries.ABM,labels=c("A", "B", "C"), ncol = 3, nrow = 1, label_size = 30, rel_widths = c(1,1,1))
 
 # show on screen
 all.plots.timeseries.ABM
 
 # save to file
-save_plot("timeseries_model1_ABM.png", all.plots.timeseries.ABM, base_width = 30, base_height = 15, units = "cm")
+save_plot("timeseries_model1_ABM.png", all.plots.timeseries.ABM, base_width = 40, base_height = 12, units = "cm")
 
 
-# Figure S5: Plot values of Fst at varying a and n------------------------------
+# Figure S9 and S11: Plot values of Fst at varying a and n------------------------------
 
 plotan.model1.ABM <- function (N, s, m, n, r, a.max = 1, t.max, runs, gaps = 10, showplot=TRUE, showlegend=TRUE) {
   
@@ -273,10 +295,11 @@ s.lines <- 5
 r.lines <- 0
 t.max.lines <- 500
 runs.lines <- 10
-n.lines <- c(13,30,100)
+n.lines <- c(3,5,9,13)
+#n.lines <- c(13,30,100)
 plot1.an <- plotan.model1.ABM(N=N.lines, s=s.lines, m = 0.01, r = r.lines, t.max=t.max.lines, n = n.lines, runs=runs.lines, showplot = FALSE, showlegend = FALSE)[[2]]
 plot2.an <- plotan.model1.ABM(N=N.lines, s=s.lines, m = 0.1, r = r.lines, t.max=t.max.lines, n = n.lines, runs=runs.lines, showplot = FALSE, showlegend = FALSE)[[2]]
-plot3.an <- plotan.model1.ABM(N=N.lines, s=s.lines, m = 0.2, r = r.lines, t.max=t.max.lines, n = n.lines, runs=runs.lines, showplot = FALSE)[[2]]
+plot3.an <- plotan.model1.ABM(N=N.lines, s=s.lines, m = 0.3, r = r.lines, t.max=t.max.lines, n = n.lines, runs=runs.lines, showplot = FALSE)[[2]]
 
 # use cowplot to create composite plot
 legend <- get_legend(plot3.an)
@@ -290,7 +313,7 @@ all.plots.an
 save_plot("plots_an_model1_ABM.png", all.plots.an, base_width = 35, base_height = 10, units = "cm")
 
 
-# Figure S6: Heat map of m and a, at different n and r -------------------------------------------------------
+# Figure S10: Heat map of m and a, at different n and r -------------------------------------------------------
 
 # first make a function for a single heatplot
 # for a grid.size x grid.size grid (e.g. if grid.size=10, a 10x10 grid)

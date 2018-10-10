@@ -1,4 +1,4 @@
-# code for agent-based version of Model 1 in Supplementary Material of Mesoudi, A. (in prep) Migration, acculturation, and the maintenance of between-group cultural variation
+# code for agent-based version of Model 1 in Supplementary Material of Mesoudi, A. (2018) Migration, acculturation, and the maintenance of between-group cultural variation. PLOS ONE
 
 # semi-spatial migration model:
 # s sub-populations each with N individuals

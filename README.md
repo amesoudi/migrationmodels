@@ -1,5 +1,5 @@
 # migrationmodels
-R code for models in Mesoudi, A. (in prep) Migration, acculturation, and the maintenance of between-group cultural variation.
+R code for models in Mesoudi, A. (2018) Migration, acculturation, and the maintenance of between-group cultural variation. PLOS ONE
 
 model1_acculturation_recursions.R contains R code for the recursion-based Model 1 examining the effect of migration, acculturation and assortation on between-group cultural variation in neutral cultural traits (measured with Fst). 
 

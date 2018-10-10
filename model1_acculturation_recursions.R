@@ -356,7 +356,7 @@ heat <- drawHeatMap.model1.rec(s = 5, n = 5, r = 0.05, t.max = 100, m.max = 0.6,
 
 # use below commands to get data, then create plots with correct legend/axis titles
 s.heats <- 5  # change common values here
-t.max.heats <- 5
+t.max.heats <- 500
 m.max.heats <- 0.6
 a.max.heats <- 1
 grid.size.heats <- 30
